@@ -1,0 +1,19 @@
+name = "auto-vault-api"
+main = "src/index.ts"
+compatibility_date = "2023-01-01"
+
+# Add your account ID
+# account_id = ""
+
+[vars]
+# Add your environment variables
+# MY_VAR = "my-value"
+
+# [[kv_namespaces]]
+# binding = "MY_KV_NAMESPACE"
+# id = "xxxxxxxx"
+
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "auto-vault-db"
+# database_id = "xxxxxxxx"

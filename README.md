@@ -1,50 +1,76 @@
-# Welcome to your Expo app 👋
+# Auto Vault
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Auto Vault is an app that automatically moves weapons and armor in the Destiny 2 postmaster to the vault (as long as the vault has space) when the postmaster is full.
 
-## Get started
+This is a monorepo containing both the Cloudflare Worker backend API and the React Native mobile app.
 
-1. Install dependencies
+## Project Structure
 
-   ```bash
-   npm install
-   ```
+- `functions/` - Cloudflare Worker API for interacting with Bungie API
+- `mobile/` - React Native mobile app built with Expo
 
-2. Start the app
+## Getting Started
 
-   ```bash
-   npx expo start
-   ```
+### Prerequisites
 
-In the output, you'll find options to open the app in a
+- Node.js (v18+)
+- npm or bun
+- For mobile development: Expo CLI, iOS Simulator/Android Emulator
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### Install Dependencies
 
 ```bash
-npm run reset-project
+# Install root dependencies
+npm install
+
+# Install workspace dependencies
+npm install -w mobile
+npm install -w functions
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Development
 
-## Learn more
+#### Mobile App
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+# Start the Expo development server
+npm run mobile
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# Run on iOS
+npm run -w mobile ios
 
-## Join the community
+# Run on Android
+npm run -w mobile android
 
-Join our community of developers creating universal apps.
+# Run on Web
+npm run -w mobile web
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+#### API Functions (Cloudflare Worker)
+
+```bash
+# Start local development server
+npm run -w functions dev
+
+# Build for production
+npm run -w functions build
+
+# Deploy to Cloudflare
+npm run -w functions deploy
+```
+
+### Code Style
+
+This project uses Biome for formatting and linting:
+
+```bash
+# Format all code
+npm run format
+
+# Lint all code
+npm run lint
+```
+
+## License
+
+[MIT](LICENSE)
