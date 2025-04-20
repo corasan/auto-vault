@@ -1,6 +1,6 @@
 import hello from '@/actions/hello'
 import { DestinyCharacter, type DestinyItem } from '@/api/client'
-import { useInventory } from '@/api/queries'
+import { useBungieServerProfile, useInventory } from '@/api/queries'
 import {
 	type DestinyItemProps,
 	DestinyItem as ItemComponent,
@@ -15,6 +15,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 // Main Home Screen Component
 export default function HomeScreen() {
 	const { top } = useSafeAreaInsets()
+	const { data, isLoading, isError, error } = useBungieServerProfile({
+		includeCharacters: true,
+	})
+
+	console.log(data)
+
 	return (
 		<ThemedView style={[styles.container, { paddingTop: top + 20 }]}>
 			<Text>Recent Items</Text>

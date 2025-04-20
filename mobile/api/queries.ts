@@ -1,10 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import {
-	DestinyItem,
-	InventoryResponse,
-	VaultPostmasterResponse,
-	apiClient,
-} from './client'
+import { useBungieServerProfile } from '../hooks/useBungieServerProfile'
+import { apiClient } from './client'
+
+// Re-export the server hooks
+export { useBungieServerProfile }
 
 /**
  * Hook to check the API health status
