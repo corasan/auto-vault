@@ -35,3 +35,4 @@ DO NOT USE MOCK DATA. All data needed is available in Bungie's API.
 - Use descriptive, camelCase names for variables and functions
 - Use PascalCase for component names and types
 - Type props using interfaces or type aliases (e.g., ComponentProps)
+- Prefer for...of

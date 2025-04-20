@@ -6,16 +6,16 @@ compatibility_date = "2023-01-01"
 # account_id = ""
 
 # Environment variables will be populated during deployment
-# [vars]
-# BUNGIE_API_KEY = ""
-# BUNGIE_CLIENT_ID = ""
-# BUNGIE_CLIENT_SECRET = ""
+[vars]
+BUNGIE_API_KEY = ""
+BUNGIE_CLIENT_ID = ""
+BUNGIE_CLIENT_SECRET = ""
 
-# [[kv_namespaces]]
-# binding = "MY_KV_NAMESPACE"
-# id = "xxxxxxxx"
+# KV Namespace for storing user data
+[[kv_namespaces]]
+binding = "AUTO_VAULT_USERS"
+id = "xxxxxxxx"  # Replace with actual KV namespace ID during deployment
 
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "auto-vault-db"
-# database_id = "xxxxxxxx"
+# Schedule the worker to run every 15 seconds
+[triggers]
+crons = ["*/15 * * * * *"]  # Every 15 seconds

@@ -50,6 +50,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	const [isLoading, setIsLoading] = useState(true)
 	const segments = useSegments()
 	const router = useRouter()
+	const [token, setToken] = useState<string | null>(null)
 
 	// Check if the user is authenticated on mount
 	useEffect(() => {
@@ -62,14 +63,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 		const inAuthGroup = segments[0] === '(auth)'
 
-		if (!user && !inAuthGroup) {
+		if (!token && !inAuthGroup) {
 			// If user is not signed in and not on auth screen, redirect to auth
 			router.replace('/login')
-		} else if (user && inAuthGroup) {
+		} else if (token && inAuthGroup) {
 			// If user is signed in but on auth screen, redirect to home
 			router.replace('/')
 		}
-	}, [user, segments, isLoading])
+	}, [token, segments, isLoading])
 
 	// Load user from secure storage
 	const loadUser = async () => {
@@ -91,42 +92,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			const redirectUri = process.env.EXPO_PUBLIC_REDIRECT_URI
 			const clientId = process.env.EXPO_PUBLIC_BUNGIE_CLIENT_ID
 
-			console.log(clientId)
-
 			if (!redirectUri || !clientId) {
 				throw new Error(
 					'Missing EXPO_PUBLIC_REDIRECT_URI or EXPO_PUBLIC_BUNGIE_CLIENT_ID in .env file',
 				)
 			}
 
-			// Build the authorization URL
 			const authUrl = `https://www.bungie.net/en/OAuth/Authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}`
-			console.log(authUrl)
-
-			// Open browser for authentication
 			const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri)
 
 			if (result.type === 'success') {
-				console.log('Auth successful, redirecting to callback', result)
 				const url = result.url
 				const urlObj = new URL(url)
 				const code = urlObj.searchParams.get('code')
 				if (!code) {
 					throw new Error('No authorization code found in the response')
 				}
-				console.log('Received auth code, exchanging for token')
 				const tokenResponse = await apiClient.exchangeCodeForToken(code)
-				console.log('token response', tokenResponse)
-
 				await setAuthToken(tokenResponse.access_token)
-				console.log('Getting user info')
-				const userProfile = await apiClient.getBungieUser()
-				await setUserInfo(userProfile)
-				// Update the state
-				setUser(userProfile)
+				setToken(tokenResponse.access_token)
+				// const userProfile = await apiClient.getBungieUser()
+				// await setUserInfo(userProfile)
+				// setUser(userProfile)
 			} else {
-				// User canceled or auth failed
-				console.log('Auth canceled or failed:', result.type)
 				Alert.alert(
 					'Authentication Canceled',
 					'You canceled the authentication process or it failed. Please try again.',
@@ -148,7 +136,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	}
 
-	// Sign out function
 	const signOut = async () => {
 		try {
 			await clearAuthData()
@@ -158,7 +145,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	}
 
-	// Function to update user data
 	const setUserData = (userData: BungieUserResponse) => {
 		setUser(userData)
 	}
@@ -170,7 +156,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	)
 }
 
-// Custom hook to use auth context
 export function useAuth() {
 	const context = useContext(AuthContext)
 
