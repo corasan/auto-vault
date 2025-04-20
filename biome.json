@@ -16,6 +16,12 @@
 			"recommended": true,
 			"correctness": {
 				"useExhaustiveDependencies": "warn"
+			},
+			"style": {
+				"noNonNullAssertion": "off"
+			},
+			"complexity": {
+				"useLiteralKeys": "off"
 			}
 		}
 	},

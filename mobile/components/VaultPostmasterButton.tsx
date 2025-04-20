@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center'
 	},
 	button: {
-		backgroundColor: '#5662f6',
+		backgroundColor: '#f5911e', // Destiny orange
 		paddingHorizontal: 20,
 		paddingVertical: 12,
 		borderRadius: 6,

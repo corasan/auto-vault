@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -6,10 +6,12 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { VaultPostmasterButton } from '@/components/VaultPostmasterButton';
 import { useHealthCheck } from '@/api/queries';
+import { useAuth } from '@/context/AuthContext';
 
 export default function HomeScreen() {
   // Example of using a query from the API
   const { isLoading, isError, data } = useHealthCheck();
+  const { user } = useAuth();
 
   return (
     <ParallaxScrollView
@@ -24,6 +26,31 @@ export default function HomeScreen() {
         <ThemedText type="title">Auto Vault</ThemedText>
         <HelloWave />
       </ThemedView>
+
+      {/* Welcome message with user info */}
+      {user && (
+        <ThemedView style={styles.welcomeContainer}>
+          <ThemedView style={styles.userInfoContainer}>
+            {user.profilePicture && (
+              <Image 
+                source={{ uri: user.profilePicture }} 
+                style={styles.profilePicture}
+              />
+            )}
+            <ThemedView>
+              <ThemedText type="subtitle">
+                Welcome, {user.displayName}!
+              </ThemedText>
+              <ThemedText style={styles.membershipId}>
+                Membership ID: {user.membershipId}
+              </ThemedText>
+            </ThemedView>
+          </ThemedView>
+          <ThemedText style={styles.connectedText}>
+            Your Bungie account is connected and ready to use Auto Vault.
+          </ThemedText>
+        </ThemedView>
+      )}
 
       <ThemedView style={styles.apiStatusContainer}>
         <ThemedText type="subtitle">API Status</ThemedText>
@@ -43,7 +70,13 @@ export default function HomeScreen() {
         <ThemedText>
           Click the button below to move items from your postmaster to the vault.
         </ThemedText>
-        <VaultPostmasterButton characterId="mock-character-id" />
+        {user ? (
+          <VaultPostmasterButton characterId={user.membershipId} />
+        ) : (
+          <ThemedText style={styles.errorText}>
+            Please log in to use this feature
+          </ThemedText>
+        )}
       </ThemedView>
 
       <ThemedView style={styles.stepContainer}>
@@ -63,6 +96,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  welcomeContainer: {
+    gap: 12,
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(245, 145, 30, 0.1)', // Destiny orange with opacity
+  },
+  userInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  profilePicture: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: '#f5911e',
+  },
+  membershipId: {
+    fontSize: 12,
+    opacity: 0.8,
+  },
+  connectedText: {
+    marginTop: 4,
   },
   apiStatusContainer: {
     gap: 8,

@@ -5,9 +5,11 @@ compatibility_date = "2023-01-01"
 # Add your account ID
 # account_id = ""
 
-[vars]
-# Add your environment variables
-# MY_VAR = "my-value"
+# Environment variables will be populated during deployment
+# [vars]
+# BUNGIE_API_KEY = ""
+# BUNGIE_CLIENT_ID = ""
+# BUNGIE_CLIENT_SECRET = ""
 
 # [[kv_namespaces]]
 # binding = "MY_KV_NAMESPACE"

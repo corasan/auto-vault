@@ -1,3 +1,4 @@
+import Constants from 'expo-constants'
 import * as SecureStore from 'expo-secure-store'
 
 // Define API response types
@@ -10,12 +11,27 @@ export interface VaultPostmasterResponse {
 	message?: string
 }
 
-// API base URL
-// In a real app, this would come from environment variables or constants
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL
+export interface BungieUserResponse {
+	membershipId: string
+	displayName: string
+	profilePicture?: string
+	// Other Bungie user properties would be here
+}
 
-// Token storage key
+export interface TokenResponse {
+	access_token: string
+	token_type: string
+	expires_in: number
+	refresh_token: string
+}
+
+// API base URL from environment variables with fallback
+export const API_BASE_URL = process.env.EXPO_PUBLIC_WORKER_URL || 'http://localhost:8787'
+
+// Token storage keys
 const AUTH_TOKEN_KEY = 'auth_token'
+const REFRESH_TOKEN_KEY = 'refresh_token'
+const USER_KEY = 'bungie_user'
 
 /**
  * Get the stored authentication token
@@ -39,6 +55,33 @@ export async function removeAuthToken(): Promise<void> {
 }
 
 /**
+ * Store the user information securely
+ */
+export async function setUserInfo(user: BungieUserResponse): Promise<void> {
+	return SecureStore.setItemAsync(USER_KEY, JSON.stringify(user))
+}
+
+/**
+ * Get the stored user information
+ */
+export async function getUserInfo(): Promise<BungieUserResponse | null> {
+	const userStr = await SecureStore.getItemAsync(USER_KEY)
+	if (userStr) {
+		return JSON.parse(userStr)
+	}
+	return null
+}
+
+/**
+ * Clear all stored authentication data
+ */
+export async function clearAuthData(): Promise<void> {
+	await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY)
+	await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY)
+	await SecureStore.deleteItemAsync(USER_KEY)
+}
+
+/**
  * API client for making requests to the Auto Vault API
  */
 export const apiClient = {
@@ -51,6 +94,7 @@ export const apiClient = {
 
 		const headers = {
 			'Content-Type': 'application/json',
+			Authorization: '',
 			...options.headers,
 		}
 
@@ -73,6 +117,29 @@ export const apiClient = {
 		}
 
 		return data as T
+	},
+
+	/**
+	 * Exchange authorization code for token
+	 */
+	async exchangeCodeForToken(code: string): Promise<TokenResponse> {
+		// Call the worker API to exchange the code for a token
+		return this.request<TokenResponse>('/api/auth/token', {
+			method: 'POST',
+			body: JSON.stringify({
+				code,
+				client_id: process.env.EXPO_PUBLIC_BUNGIE_CLIENT_ID,
+				grant_type: 'authorization_code',
+				redirect_uri: process.env.EXPO_PUBLIC_REDIRECT_URI,
+			}),
+		})
+	},
+
+	/**
+	 * Get Bungie user profile information
+	 */
+	async getBungieUser(): Promise<BungieUserResponse> {
+		return this.request<BungieUserResponse>('/api/auth/user')
 	},
 
 	/**

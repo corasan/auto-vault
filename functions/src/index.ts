@@ -1,4 +1,10 @@
-import { getPostmasterItems, hasVaultSpace, transferItemToVault } from './bungie'
+import { 
+	getPostmasterItems, 
+	hasVaultSpace, 
+	transferItemToVault, 
+	exchangeCodeForToken,
+	getBungieUser
+} from './bungie'
 import { Item, ItemType } from './types'
 
 export interface Env {
@@ -90,11 +96,96 @@ export default {
 			}
 		}
 
-		// Handle auth callback (not implemented in this example)
-		if (url.pathname === '/api/auth/callback') {
-			return new Response(JSON.stringify({ status: 'authorized' }), {
-				headers: { 'Content-Type': 'application/json' },
-			})
+		// Token exchange endpoint
+		if (url.pathname === '/api/auth/token' && request.method === 'POST') {
+			try {
+				const body = await request.json();
+				
+				if (!body.code) {
+					return new Response(
+						JSON.stringify({ error: 'Missing authorization code' }),
+						{
+							status: 400,
+							headers: { 'Content-Type': 'application/json' },
+						}
+					);
+				}
+				
+				// Exchange code for token
+				const tokenResponse = await exchangeCodeForToken(
+					env,
+					body.code,
+					body.redirect_uri || 'autovault://auth'
+				);
+				
+				return new Response(JSON.stringify(tokenResponse), {
+					headers: { 'Content-Type': 'application/json' },
+				});
+			} catch (error) {
+				console.error('Error exchanging token:', error);
+				
+				return new Response(
+					JSON.stringify({
+						error: 'Failed to exchange token',
+						message: error instanceof Error ? error.message : 'Unknown error',
+					}),
+					{
+						status: 500,
+						headers: { 'Content-Type': 'application/json' },
+					}
+				);
+			}
+		}
+		
+		// Get user profile endpoint
+		if (url.pathname === '/api/auth/user') {
+			try {
+				// Get token from Authorization header
+				const authHeader = request.headers.get('Authorization');
+				
+				if (!authHeader || !authHeader.startsWith('Bearer ')) {
+					return new Response(
+						JSON.stringify({ error: 'Missing or invalid authorization header' }),
+						{
+							status: 401,
+							headers: { 'Content-Type': 'application/json' },
+						}
+					);
+				}
+				
+				const token = authHeader.substring(7);
+				
+				// Get user profile
+				const userProfile = await getBungieUser(env, token);
+				
+				return new Response(JSON.stringify(userProfile), {
+					headers: { 'Content-Type': 'application/json' },
+				});
+			} catch (error) {
+				console.error('Error getting user profile:', error);
+				
+				return new Response(
+					JSON.stringify({
+						error: 'Failed to get user profile',
+						message: error instanceof Error ? error.message : 'Unknown error',
+					}),
+					{
+						status: 500,
+						headers: { 'Content-Type': 'application/json' },
+					}
+				);
+			}
+		}
+
+		// Handle CORS preflight requests
+		if (request.method === 'OPTIONS') {
+			return new Response(null, {
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+					'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+				},
+			});
 		}
 
 		return new Response('Not found', { status: 404 })

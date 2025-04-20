@@ -10,7 +10,11 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.henrypl.auto-vault"
+      "bundleIdentifier": "com.henrypl.auto-vault",
+      "associatedDomains": [
+        "applinks:autovault.example.com"
+      ],
+      "appleTeamId": "M52W2L8ZQV"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +22,22 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.henrypl.autovault"
+      "package": "com.henrypl.autovault",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "autovault"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -27,6 +46,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-secure-store",
       [
         "expo-splash-screen",
         {
@@ -36,10 +56,22 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      [
+        "expo-dev-client",
+        {
+          "launchMode": "most-recent"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "a2803bfd-e3ab-4573-98ef-04057ec5cce7"
+      },
+      "router": {}
+    },
+    "owner": "henrypl"
   }
 }
