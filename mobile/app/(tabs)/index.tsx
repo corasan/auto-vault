@@ -1,110 +1,195 @@
-import { Image, ScrollView, StyleSheet, View } from 'react-native'
-
-import { useHealthCheck } from '@/api/queries'
-import { HelloWave } from '@/components/HelloWave'
-import ParallaxScrollView from '@/components/ParallaxScrollView'
+import { DestinyCharacter, type DestinyItem } from '@/api/client'
+import { useInventory } from '@/api/queries'
+import {
+	type DestinyItemProps,
+	DestinyItem as ItemComponent,
+	ItemsList,
+} from '@/components/DestinyItem'
 import { ThemedText } from '@/components/ThemedText'
 import { ThemedView } from '@/components/ThemedView'
 import { VaultPostmasterButton } from '@/components/VaultPostmasterButton'
 import { useAuth } from '@/context/AuthContext'
+import { LegendList } from '@legendapp/list'
+import React from 'react'
+import { ActivityIndicator, Image, RefreshControl, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+// Main Home Screen Component
 export default function HomeScreen() {
-	// Example of using a query from the API
-	const { isLoading, isError, data } = useHealthCheck()
 	const { user } = useAuth()
 	const { top } = useSafeAreaInsets()
 
+	// Use the actual query or mock data for development
+	const {
+		data: inventoryData,
+		isLoading,
+		isError,
+		error,
+		refetch,
+		isRefetching,
+	} = useInventory()
+
+	// Use mock data for development
+	const data = inventoryData
+
+	// Prepare postmaster items for display
+	const postmasterItems =
+		data?.items.postmaster.map(item => mapDestinyItemToProps(item, true)) || []
+
+	// Prepare latest items (sort by most recent)
+	const latestItems =
+		data?.items.inventory
+			.slice()
+			.sort((a, b) => (b.itemInstanceId > a.itemInstanceId ? 1 : -1))
+			.slice(0, 10)
+			.map(item => mapDestinyItemToProps(item)) || []
+
+	// Handle item press
+	const handleItemPress = (itemId: string) => {
+		console.log('Item pressed:', itemId)
+		// TODO: Show item details or options
+	}
+
+	// Get active character
+	const activeCharacter = data?.characters[0]
+
 	return (
-		<View style={{ flex: 1 }}>
-			<ScrollView
-				contentContainerStyle={[styles.contentContainerStyle, { paddingTop: top + 20 }]}
-			>
-				{/* Welcome message with user info */}
-				{user && (
-					<ThemedView style={styles.welcomeContainer}>
-						<ThemedView style={styles.userInfoContainer}>
-							{user.profilePicture && (
-								<Image
-									source={{ uri: user.profilePicture }}
-									style={styles.profilePicture}
-								/>
-							)}
-							<ThemedView>
-								<ThemedText type="subtitle">Welcome, {user.displayName}!</ThemedText>
-								<ThemedText style={styles.membershipId}>
-									Membership ID: {user.membershipId}
+		<ThemedView style={styles.container}>
+			<LegendList
+				data={[]}
+				estimatedItemSize={100}
+				ListHeaderComponent={
+					<>
+						{/* User Welcome & Character Info */}
+						{user && activeCharacter && (
+							<ThemedView style={styles.headerContainer}>
+								<ThemedView style={styles.userInfoContainer}>
+									{/* {user.profilePicture && (
+										<Image
+											source={{ uri: user.profilePicture }}
+											style={styles.profilePicture}
+										/>
+									)} */}
+									<ThemedView>
+										<ThemedText type="subtitle">Welcome, {user.displayName}!</ThemedText>
+										<ThemedText style={styles.characterInfo}>
+											{activeCharacter.classType} · Power {activeCharacter.light}
+										</ThemedText>
+									</ThemedView>
+								</ThemedView>
+							</ThemedView>
+						)}
+
+						{/* Loading State */}
+						{isLoading && (
+							<ThemedView style={styles.loadingContainer}>
+								<ActivityIndicator size="large" color="#f5911e" />
+								<ThemedText style={styles.loadingText}>
+									Loading your Guardian inventory...
 								</ThemedText>
 							</ThemedView>
-						</ThemedView>
-						<ThemedText style={styles.connectedText}>
-							Your Bungie account is connected and ready to use Auto Vault.
-						</ThemedText>
-					</ThemedView>
-				)}
+						)}
 
-				<ThemedView style={styles.apiStatusContainer}>
-					<ThemedText type="subtitle">API Status</ThemedText>
-					{isLoading ? (
-						<ThemedText>Checking API status...</ThemedText>
-					) : isError ? (
-						<ThemedText style={styles.errorText}>API is unavailable</ThemedText>
-					) : (
-						<ThemedText style={styles.successText}>
-							API Status: {data?.status || 'Unknown'}
-						</ThemedText>
-					)}
-				</ThemedView>
+						{/* Error State */}
+						{isError && (
+							<ThemedView style={styles.errorContainer}>
+								<ThemedText style={styles.errorText}>
+									Error loading inventory:{' '}
+									{error instanceof Error ? error.message : 'Unknown error'}
+								</ThemedText>
+							</ThemedView>
+						)}
 
-				<ThemedView style={styles.stepContainer}>
-					<ThemedText type="subtitle">Vault Postmaster Items</ThemedText>
-					<ThemedText>
-						Click the button below to move items from your postmaster to the vault.
-					</ThemedText>
-					{user ? (
-						<VaultPostmasterButton characterId={user.membershipId} />
-					) : (
-						<ThemedText style={styles.errorText}>
-							Please log in to use this feature
-						</ThemedText>
-					)}
-				</ThemedView>
+						{/* Postmaster Items Section */}
+						{postmasterItems.length > 0 && (
+							<ThemedView style={styles.postmasterContainer}>
+								<ThemedView style={styles.sectionHeader}>
+									<ThemedText type="subtitle">Postmaster Items</ThemedText>
+									<ThemedText style={styles.itemCount}>
+										{postmasterItems.length} items
+									</ThemedText>
+								</ThemedView>
 
-				<ThemedView style={styles.stepContainer}>
-					<ThemedText type="subtitle">Features</ThemedText>
-					<ThemedText>
-						• Automatically moves weapons and armor from postmaster to vault{'\n'}•
-						Prevents loss of valuable items when postmaster is full{'\n'}• Uses Bungie's
-						official API for safe item transfers
-					</ThemedText>
-				</ThemedView>
-			</ScrollView>
-		</View>
+								<ThemedText style={styles.sectionDescription}>
+									These items are at risk! They'll be lost if your postmaster fills up.
+								</ThemedText>
+
+								<ItemsList
+									title=""
+									items={postmasterItems}
+									onItemPress={handleItemPress}
+								/>
+
+								<VaultPostmasterButton characterId={user?.membershipId || 'unknown'} />
+							</ThemedView>
+						)}
+
+						{/* Latest Items Section */}
+						{latestItems.length > 0 && (
+							<ThemedView style={styles.latestItemsContainer}>
+								<ThemedView style={styles.sectionHeader}>
+									<ThemedText type="subtitle">Recent Items</ThemedText>
+									<ThemedText style={styles.itemCount}>
+										{latestItems.length} items
+									</ThemedText>
+								</ThemedView>
+
+								<ItemsList title="" items={latestItems} onItemPress={handleItemPress} />
+							</ThemedView>
+						)}
+					</>
+				}
+				renderItem={() => null}
+				contentContainerStyle={[styles.listContentContainer, { paddingTop: top + 20 }]}
+				refreshControl={
+					<RefreshControl
+						refreshing={isRefetching}
+						onRefresh={refetch}
+						colors={['#f5911e']}
+						tintColor="#f5911e"
+					/>
+				}
+			/>
+		</ThemedView>
 	)
 }
 
+// Helper function to map API item to component props
+function mapDestinyItemToProps(
+	item: DestinyItem,
+	isInPostmaster = false,
+): DestinyItemProps {
+	return {
+		id: item.itemId,
+		name: item.name,
+		type: item.itemType,
+		subType: item.itemSubType,
+		icon: item.icon,
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		rarity: item.tierType as any, // Cast to rarity type
+		power: item.power,
+		isInPostmaster: isInPostmaster || item.location === 'postmaster',
+	}
+}
+
 const styles = StyleSheet.create({
-	contentContainerStyle: {
-		gap: 8,
-		paddingBottom: 100,
+	container: {
+		flex: 1,
+	},
+	listContentContainer: {
 		paddingHorizontal: 16,
+		paddingBottom: 100,
 	},
-	titleContainer: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		gap: 8,
-	},
-	welcomeContainer: {
-		gap: 12,
+	headerContainer: {
 		marginBottom: 16,
-		padding: 16,
-		borderRadius: 8,
-		backgroundColor: 'rgba(245, 145, 30, 0.1)', // Destiny orange with opacity
 	},
 	userInfoContainer: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		gap: 12,
+		padding: 16,
+		borderRadius: 8,
+		backgroundColor: 'rgba(245, 145, 30, 0.1)', // Destiny orange with opacity
 	},
 	profilePicture: {
 		width: 50,
@@ -113,32 +198,45 @@ const styles = StyleSheet.create({
 		borderWidth: 2,
 		borderColor: '#f5911e',
 	},
-	membershipId: {
+	characterInfo: {
 		fontSize: 12,
 		opacity: 0.8,
 	},
-	connectedText: {
-		marginTop: 4,
+	loadingContainer: {
+		padding: 20,
+		alignItems: 'center',
+		justifyContent: 'center',
 	},
-	apiStatusContainer: {
-		gap: 8,
+	loadingText: {
+		marginTop: 10,
+	},
+	errorContainer: {
+		padding: 20,
+		borderRadius: 8,
+		backgroundColor: 'rgba(255, 59, 48, 0.1)',
 		marginBottom: 16,
 	},
 	errorText: {
 		color: '#ff3b30',
 	},
-	successText: {
-		color: '#34c759',
+	postmasterContainer: {
+		marginBottom: 24,
 	},
-	stepContainer: {
-		gap: 8,
+	latestItemsContainer: {
 		marginBottom: 16,
 	},
-	reactLogo: {
-		height: 178,
-		width: 290,
-		bottom: 0,
-		left: 0,
-		position: 'absolute',
+	sectionHeader: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 8,
+	},
+	sectionDescription: {
+		marginBottom: 12,
+		fontStyle: 'italic',
+	},
+	itemCount: {
+		fontSize: 14,
+		opacity: 0.7,
 	},
 })

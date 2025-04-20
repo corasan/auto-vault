@@ -7,10 +7,10 @@ import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import 'react-native-reanimated'
 import 'expo-dev-client'
-
 import { AuthProvider } from '@/context/AuthContext'
 import { useColorScheme } from '@/hooks/useColorScheme'
 import { useURLHandler } from '@/hooks/useURLHandler'
+import { useReactQueryDevTools } from '@dev-plugins/react-query'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -27,6 +27,7 @@ const queryClient = new QueryClient({
 SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
+	useReactQueryDevTools(queryClient)
 	const colorScheme = useColorScheme()
 	const [loaded] = useFonts({
 		SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),

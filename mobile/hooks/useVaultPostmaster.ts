@@ -21,22 +21,33 @@ export function useVaultPostmaster() {
 	/**
 	 * Triggers the API to vault postmaster items
 	 */
-	const vaultPostmasterItems = async (characterId: string): Promise<boolean> => {
+	const vaultPostmasterItems = async (characterId: string, membershipType: number, destinyMembershipId: string): Promise<boolean> => {
 		setIsLoading(true)
 		setError(null)
 		setResult(null)
 
 		try {
-			// In a real app, this would be configured with the correct API URL
-			const apiUrl = 'https://api.autovault.example.com/api/vault-postmaster-items'
+			// Get API URL from environment variables
+			const apiUrl = `${process.env.EXPO_PUBLIC_WORKER_URL || 'http://localhost:8787'}/api/vault-postmaster-items`
+			
+			// Get token from secure storage
+			const token = await getAuthToken()
+			
+			if (!token) {
+				throw new Error("Not authenticated")
+			}
 			
 			const response = await fetch(apiUrl, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${getAuthToken()}` // Would be implemented to get the token from storage
+					'Authorization': `Bearer ${token}`
 				},
-				body: JSON.stringify({ characterId })
+				body: JSON.stringify({ 
+					characterId,
+					membershipType,
+					destinyMembershipId 
+				})
 			})
 
 			const data: VaultPostmasterResponse = await response.json()
@@ -62,10 +73,11 @@ export function useVaultPostmaster() {
 		}
 	}
 
-	// Mock function to get auth token
-	const getAuthToken = (): string => {
-		// In a real app, this would get the token from secure storage
-		return 'mock-token'
+	// Get auth token from secure storage
+	const getAuthToken = async (): Promise<string | null> => {
+		// Use SecureStore to get the token
+		const { getAuthToken } = await import('../api/client')
+		return getAuthToken()
 	}
 
 	return {

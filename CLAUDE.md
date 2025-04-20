@@ -11,6 +11,8 @@ the player is on a mission and the mission/activity gives too much loot and the 
 
 This repo has a `functions` directory, which calls the Bungie API and implements the API the react-native app will consume.
 
+DO NOT USE MOCK DATA. All data needed is available in Bungie's API.
+
 ## Build & Test Commands
 - Start development server: `npm start` or `bun start`
 - Run on iOS: `npm run ios` or `bun run ios`
