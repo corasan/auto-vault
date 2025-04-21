@@ -13,6 +13,7 @@ import {
 	type BungieUserResponse,
 	apiClient,
 	clearAuthData,
+	getAuthToken,
 	getUserInfo,
 	setAuthToken,
 	setUserInfo,
@@ -54,7 +55,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 	// Check if the user is authenticated on mount
 	useEffect(() => {
-		loadUser()
+		loadToken()
 	}, [])
 
 	// Handle routing based on authentication state
@@ -81,6 +82,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			}
 		} catch (error) {
 			console.error('Failed to load user from secure storage:', error)
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	const loadToken = async () => {
+		try {
+			const storedToken = await getAuthToken()
+			if (storedToken) {
+				setToken(storedToken)
+			}
+		} catch (error) {
+			console.error('Failed to load token from secure storage:', error)
 		} finally {
 			setIsLoading(false)
 		}

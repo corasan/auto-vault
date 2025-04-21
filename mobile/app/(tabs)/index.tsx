@@ -12,19 +12,27 @@ import React, { Suspense } from 'react'
 import { ActivityIndicator, StyleSheet, Text } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-// Main Home Screen Component
-export default function HomeScreen() {
-	const { top } = useSafeAreaInsets()
-	const { data, isLoading, isError, error } = useBungieServerProfile({
+const UserName = () => {
+	const { data, error } = useBungieServerProfile({
 		includeCharacters: true,
 	})
 
-	console.log(data)
+	if (error) return <Text>Error: {error.message}</Text>
+	if (!data) return <Text>No data</Text>
+
+	return <Text>{data.displayName}</Text>
+}
+
+// Main Home Screen Component
+export default function HomeScreen() {
+	const { top } = useSafeAreaInsets()
 
 	return (
 		<ThemedView style={[styles.container, { paddingTop: top + 20 }]}>
 			<Text>Recent Items</Text>
-			<Suspense fallback={<ActivityIndicator />}>{hello({ name: 'Henry' })}</Suspense>
+			<Suspense fallback={<ActivityIndicator />}>
+				<UserName />
+			</Suspense>
 		</ThemedView>
 	)
 }
