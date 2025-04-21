@@ -13,15 +13,17 @@ This repo has a `functions` directory, which calls the Bungie API and implements
 
 DO NOT USE MOCK DATA. All data needed is available in Bungie's API.
 
+ALWAYS USE BUN
+
 ## Build & Test Commands
-- Start development server: `npm start` or `bun start`
-- Run on iOS: `npm run ios` or `bun run ios`
-- Run on Android: `npm run android` or `bun run android`
-- Run on Web: `npm run web` or `bun run web`
-- Run all tests: `npm test` or `bun test`
-- Run single test: `npm test -- -t "test name"` or `bun test -- -t "test name"`
-- Lint code: `npm run lint` or `bun run lint`
-- Reset project: `npm run reset-project` or `bun run reset-project`
+- Start development server:  `bun start`
+- Run on iOS: `bun run ios`
+- Run on Android: `bun run android`
+- Run on Web: `bun run web`
+- Run all tests: `bun test`
+- Run single test:  `bun test -- -t "test name"`
+- Lint code: `bun run lint`
+- Reset project: `bun run reset-project`
 
 ## Code Style Guidelines
 - Use TypeScript with strict mode enabled
