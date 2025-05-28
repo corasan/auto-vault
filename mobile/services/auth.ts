@@ -198,16 +198,7 @@ class AuthService {
 			const crossSaveOverride = await SecureStore.getItemAsync('crossSaveOverride')
 			const platformsStr = await SecureStore.getItemAsync('platforms')
 
-			console.log('Retrieved stored data:', {
-				userId,
-				displayName,
-				bungieNetId,
-				membershipType,
-				membershipId,
-				platformDisplayName,
-				crossSaveOverride,
-				platformsStr
-			})
+
 
 			if (!userId || !displayName) {
 				return null
@@ -233,10 +224,8 @@ class AuthService {
 				platforms,
 			}
 
-			console.log('Returning user:', user)
 			return user
 		} catch (error) {
-			console.error('Error getting current user:', error)
 			return null
 		}
 	}
@@ -278,7 +267,6 @@ class AuthService {
 	}
 
 	private async storeUser(user: User): Promise<void> {
-		console.log('Storing user data:', user)
 		await SecureStore.setItemAsync('userId', user.id)
 		await SecureStore.setItemAsync('userDisplayName', user.displayName)
 		await SecureStore.setItemAsync('bungieNetId', user.bungieNetId)

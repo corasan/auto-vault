@@ -6,8 +6,6 @@ import { useAuth } from '../../contexts/AuthContext'
 export default function HomeScreen() {
 	const { user, logout, isLoading } = useAuth()
 
-	console.log('HomeScreen user data:', user)
-
 	const handleLogout = async () => {
 		Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
 			{ text: 'Cancel', style: 'cancel' },
@@ -59,8 +57,11 @@ export default function HomeScreen() {
 								{user.platforms && user.platforms.length > 1 && (
 									<View style={styles.platformsInfo}>
 										<Text style={styles.platformsTitle}>Available Platforms:</Text>
-										{user.platforms.map((platform, index) => (
-											<Text key={index} style={styles.platformItem}>
+										{user.platforms.map(platform => (
+											<Text
+												key={`${platform.membershipType}-${platform.membershipId}`}
+												style={styles.platformItem}
+											>
 												• {platform.platformName} - {platform.displayName}
 											</Text>
 										))}
@@ -81,7 +82,10 @@ export default function HomeScreen() {
 					</View>
 
 					<View style={styles.actionsSection}>
-						<Pressable style={styles.actionButton}>
+						<Pressable
+							style={styles.actionButton}
+							onPress={() => router.push('/(tabs)/postmaster')}
+						>
 							<Text style={styles.actionButtonText}>View Postmaster</Text>
 							<Text style={styles.actionButtonSubtext}>Check current items</Text>
 						</Pressable>

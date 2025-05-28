@@ -53,6 +53,29 @@ interface BungieCharacter {
 	percentToNextLevel: number
 }
 
+interface PostmasterItem {
+	itemHash: number
+	itemInstanceId: string
+	quantity: number
+	bindStatus: number
+	location: number
+	bucketHash: number
+	transferStatus: number
+	lockable: boolean
+	state: number
+	dismantlePermission: number
+	isWrapper: boolean
+}
+
+interface InventoryData {
+	characters: Record<string, BungieCharacter>
+	postmasterItems: Record<string, PostmasterItem[]>
+	vaultSpace: {
+		used: number
+		total: number
+	}
+}
+
 export class BungieAuthService {
 	private readonly baseUrl = 'https://www.bungie.net/Platform'
 	private readonly authUrl = 'https://www.bungie.net/en/OAuth/Authorize'
@@ -150,6 +173,59 @@ export class BungieAuthService {
 		return response.Response?.characters?.data || {}
 	}
 
+	async getInventoryData(
+		accessToken: string,
+		membershipType: number,
+		membershipId: string
+	): Promise<InventoryData> {
+		const components = [
+			'200', // Characters
+			'201', // CharacterInventories
+			'102', // ProfileInventories (vault)
+		].join(',')
+
+		const response = await this.makeApiRequest(
+			`/Destiny2/${membershipType}/Profile/${membershipId}/?components=${components}`,
+			accessToken
+		)
+
+		const profileData = response.Response
+
+		const characters = profileData?.characters?.data || {}
+		const characterInventories = profileData?.characterInventories?.data || {}
+		const profileInventory = profileData?.profileInventory?.data?.items || []
+
+		const postmasterItems: Record<string, PostmasterItem[]> = {}
+		const POSTMASTER_BUCKET_HASH = 215593132
+
+		Object.entries(characterInventories).forEach(([characterId, inventory]: [string, any]) => {
+			const items = inventory.items || []
+			postmasterItems[characterId] = items.filter((item: any) => 
+				item.bucketHash === POSTMASTER_BUCKET_HASH
+			)
+		})
+
+		const vaultSpace = {
+			used: profileInventory.length,
+			total: 500
+		}
+
+		return {
+			characters,
+			postmasterItems,
+			vaultSpace
+		}
+	}
+
+	async getPostmasterItems(
+		accessToken: string,
+		membershipType: number,
+		membershipId: string
+	): Promise<Record<string, PostmasterItem[]>> {
+		const inventoryData = await this.getInventoryData(accessToken, membershipType, membershipId)
+		return inventoryData.postmasterItems
+	}
+
 	async validateToken(accessToken: string): Promise<boolean> {
 		try {
 			await this.makeApiRequest('/User/GetMembershipsForCurrentUser/', accessToken)
@@ -187,4 +263,4 @@ export class BungieAuthService {
 	}
 }
 
-export { type TokenResponse, type BungieUser, type BungieCharacter }
+export { type TokenResponse, type BungieUser, type BungieCharacter, type PostmasterItem, type InventoryData }

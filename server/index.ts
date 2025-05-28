@@ -1,5 +1,6 @@
 import { BungieAuthService } from './src/auth/bungie'
 import { AuthRoutes } from './src/routes/auth'
+import { PostmasterRoutes } from './src/routes/postmaster'
 
 const BUNGIE_API_KEY = process.env.BUNGIE_API_KEY || ''
 const BUNGIE_CLIENT_ID = process.env.BUNGIE_CLIENT_ID || ''
@@ -18,6 +19,7 @@ const bungieAuth = new BungieAuthService(
 )
 
 const authRoutes = new AuthRoutes(bungieAuth)
+const postmasterRoutes = new PostmasterRoutes(bungieAuth)
 
 const server = Bun.serve({
 	port: 3000,
@@ -94,6 +96,23 @@ const server = Bun.serve({
 				})
 				return response
 			}
+
+			if (url.pathname === '/postmaster/items' && req.method === 'GET') {
+				const response = await postmasterRoutes.handleGetItems(req)
+				Object.entries(corsHeaders).forEach(([key, value]) => {
+					response.headers.set(key, value)
+				})
+				return response
+			}
+
+			if (url.pathname === '/postmaster/transfer' && req.method === 'POST') {
+				const response = await postmasterRoutes.handleTransferItems(req)
+				Object.entries(corsHeaders).forEach(([key, value]) => {
+					response.headers.set(key, value)
+				})
+				return response
+			}
+
 
 			return new Response(JSON.stringify({ error: 'Not found' }), {
 				status: 404,
