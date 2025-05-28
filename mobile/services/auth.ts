@@ -5,11 +5,23 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000'
 const BUNGIE_CLIENT_ID = process.env.EXPO_PUBLIC_BUNGIE_CLIENT_ID || '49563'
 const REDIRECT_URI = process.env.EXPO_PUBLIC_REDIRECT_URI || 'autovault://auth'
 
+export interface Platform {
+	membershipType: number
+	membershipId: string
+	displayName: string
+	isPublic: boolean
+	platformName: string
+}
+
 export interface User {
 	id: string
 	displayName: string
+	bungieNetId: string
 	membershipType: number
 	membershipId: string
+	platformDisplayName: string
+	crossSaveOverride: number
+	platforms: Platform[]
 }
 
 export interface AuthTokens {
@@ -179,20 +191,52 @@ class AuthService {
 		try {
 			const userId = await SecureStore.getItemAsync('userId')
 			const displayName = await SecureStore.getItemAsync('userDisplayName')
+			const bungieNetId = await SecureStore.getItemAsync('bungieNetId')
 			const membershipType = await SecureStore.getItemAsync('membershipType')
 			const membershipId = await SecureStore.getItemAsync('membershipId')
+			const platformDisplayName = await SecureStore.getItemAsync('platformDisplayName')
+			const crossSaveOverride = await SecureStore.getItemAsync('crossSaveOverride')
+			const platformsStr = await SecureStore.getItemAsync('platforms')
+
+			console.log('Retrieved stored data:', {
+				userId,
+				displayName,
+				bungieNetId,
+				membershipType,
+				membershipId,
+				platformDisplayName,
+				crossSaveOverride,
+				platformsStr
+			})
 
 			if (!userId || !displayName) {
 				return null
 			}
 
-			return {
+			let platforms: Platform[] = []
+			if (platformsStr) {
+				try {
+					platforms = JSON.parse(platformsStr)
+				} catch {
+					platforms = []
+				}
+			}
+
+			const user = {
 				id: userId,
 				displayName,
+				bungieNetId: bungieNetId || '',
 				membershipType: membershipType ? Number.parseInt(membershipType, 10) : 0,
 				membershipId: membershipId || '',
+				platformDisplayName: platformDisplayName || '',
+				crossSaveOverride: crossSaveOverride ? Number.parseInt(crossSaveOverride, 10) : 0,
+				platforms,
 			}
-		} catch {
+
+			console.log('Returning user:', user)
+			return user
+		} catch (error) {
+			console.error('Error getting current user:', error)
 			return null
 		}
 	}
@@ -215,8 +259,12 @@ class AuthService {
 			await SecureStore.deleteItemAsync('refreshToken')
 			await SecureStore.deleteItemAsync('userId')
 			await SecureStore.deleteItemAsync('userDisplayName')
+			await SecureStore.deleteItemAsync('bungieNetId')
 			await SecureStore.deleteItemAsync('membershipType')
 			await SecureStore.deleteItemAsync('membershipId')
+			await SecureStore.deleteItemAsync('platformDisplayName')
+			await SecureStore.deleteItemAsync('crossSaveOverride')
+			await SecureStore.deleteItemAsync('platforms')
 			await SecureStore.deleteItemAsync('expiresAt')
 		} catch (error) {
 			console.error('Logout error:', error)
@@ -230,10 +278,15 @@ class AuthService {
 	}
 
 	private async storeUser(user: User): Promise<void> {
+		console.log('Storing user data:', user)
 		await SecureStore.setItemAsync('userId', user.id)
 		await SecureStore.setItemAsync('userDisplayName', user.displayName)
+		await SecureStore.setItemAsync('bungieNetId', user.bungieNetId)
 		await SecureStore.setItemAsync('membershipType', user.membershipType.toString())
 		await SecureStore.setItemAsync('membershipId', user.membershipId)
+		await SecureStore.setItemAsync('platformDisplayName', user.platformDisplayName)
+		await SecureStore.setItemAsync('crossSaveOverride', user.crossSaveOverride.toString())
+		await SecureStore.setItemAsync('platforms', JSON.stringify(user.platforms))
 	}
 }
 

@@ -10,6 +10,20 @@ interface AuthSession {
 	displayName: string
 }
 
+function getPlatformName(membershipType: number): string {
+	switch (membershipType) {
+		case 1: return 'Xbox'
+		case 2: return 'PlayStation'
+		case 3: return 'Steam'
+		case 4: return 'Blizzard'
+		case 5: return 'Stadia'
+		case 6: return 'Epic Games'
+		case 10: return 'Demon'
+		case 254: return 'Bungie Next'
+		default: return 'Unknown'
+	}
+}
+
 export class AuthRoutes {
 	private readonly sessions = new Map<string, AuthSession>()
 
@@ -68,6 +82,8 @@ export class AuthRoutes {
 
 			const tokens = await this.bungieAuth.exchangeCodeForTokens(code)
 			const user = await this.bungieAuth.getBungieUser(tokens.access_token)
+
+			console.log('Bungie user data:', JSON.stringify(user, null, 2))
 
 			if (!user.destinyMemberships.length) {
 				return new Response(
@@ -156,6 +172,8 @@ export class AuthRoutes {
 			}
 
 			const primaryMembership = user.destinyMemberships[0]
+			console.log('Primary membership:', primaryMembership)
+			
 			const characters = await this.bungieAuth.getCharacters(
 				tokens.access_token,
 				primaryMembership?.membershipType ?? 0,
@@ -174,29 +192,43 @@ export class AuthRoutes {
 
 			this.sessions.set(session.userId, session)
 
-			return new Response(
-				JSON.stringify({
-					success: true,
-					user: {
-						id: session.userId,
-						displayName: session.displayName,
-						membershipType: session.membershipType,
-						membershipId: session.membershipId,
-					},
-					tokens: {
-						accessToken: tokens.access_token,
-						refreshToken: tokens.refresh_token,
-						expiresIn: tokens.expires_in,
-						expiresAt: session.expiresAt,
-					},
-					characters: Object.values(characters).map(char => ({
-						characterId: char.characterId,
-						classType: char.classType,
-						light: char.light,
-						emblemPath: char.emblemPath,
-						dateLastPlayed: char.dateLastPlayed,
+			const responseData = {
+				success: true,
+				user: {
+					id: session.userId,
+					displayName: session.displayName,
+					bungieNetId: user.bungieNetUser.membershipId,
+					membershipType: session.membershipType,
+					membershipId: session.membershipId,
+					platformDisplayName: primaryMembership.displayName,
+					crossSaveOverride: primaryMembership.crossSaveOverride || 0,
+					platforms: user.destinyMemberships.map(membership => ({
+						membershipType: membership.membershipType,
+						membershipId: membership.membershipId,
+						displayName: membership.displayName,
+						isPublic: membership.isPublic,
+						platformName: getPlatformName(membership.membershipType),
 					})),
-				}),
+				},
+				tokens: {
+					accessToken: tokens.access_token,
+					refreshToken: tokens.refresh_token,
+					expiresIn: tokens.expires_in,
+					expiresAt: session.expiresAt,
+				},
+				characters: Object.values(characters).map(char => ({
+					characterId: char.characterId,
+					classType: char.classType,
+					light: char.light,
+					emblemPath: char.emblemPath,
+					dateLastPlayed: char.dateLastPlayed,
+				})),
+			}
+
+			console.log('Response data being sent:', JSON.stringify(responseData, null, 2))
+
+			return new Response(
+				JSON.stringify(responseData),
 				{
 					status: 200,
 					headers: {
