@@ -4,14 +4,15 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run --watch index.ts"
+    "dev": "sst dev",
+    "start": "bun run --watch index.ts"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.149",
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "sst": "3.16.3"

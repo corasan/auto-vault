@@ -43,6 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			setIsLoading(true)
 			const authResponse = await authService.authenticateWithBungie()
 
+			console.log(authResponse)
+
 			if (authResponse.success) {
 				setUser(authResponse.user)
 				setIsAuthenticated(true)

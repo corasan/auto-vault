@@ -7,7 +7,10 @@ import { useEffect } from 'react'
 import 'react-native-reanimated'
 import 'expo-dev-client'
 import { useReactQueryDevTools } from '@dev-plugins/react-query'
-import { AuthProvider, useAuth } from '../contexts/AuthContext'
+import { ThemeProvider as NavThemeProvider } from '@react-navigation/native'
+import { AuthProvider, useAuth } from '~/contexts/AuthContext'
+import { useColorScheme, useInitialAndroidBarSync } from '~/lib/useColorScheme'
+import { NAV_THEME } from '~/theme'
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -41,15 +44,16 @@ function RootLayoutNav() {
 		<Stack screenOptions={{ headerShown: false }}>
 			<Stack.Screen name="(auth)" options={{ headerShown: false }} />
 			<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-			<Stack.Screen name="+not-found" />
 		</Stack>
 	)
 }
 
 export default function RootLayout() {
 	useReactQueryDevTools(queryClient)
+	useInitialAndroidBarSync()
+	const { colorScheme, isDarkColorScheme } = useColorScheme()
 	const [loaded] = useFonts({
-		SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+		SpaceMono: require('../../assets/fonts/SpaceMono-Regular.ttf'),
 	})
 
 	useEffect(() => {
@@ -64,10 +68,16 @@ export default function RootLayout() {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			<AuthProvider>
-				<RootLayoutNav />
-				<StatusBar style="auto" />
-			</AuthProvider>
+			<StatusBar
+				key={`root-status-bar-${isDarkColorScheme ? 'light' : 'dark'}`}
+				style={isDarkColorScheme ? 'light' : 'dark'}
+			/>
+			<NavThemeProvider value={NAV_THEME[colorScheme]}>
+				<AuthProvider>
+					<RootLayoutNav />
+					<StatusBar style="auto" />
+				</AuthProvider>
+			</NavThemeProvider>
 		</QueryClientProvider>
 	)
 }

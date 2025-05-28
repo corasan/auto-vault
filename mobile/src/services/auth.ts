@@ -110,14 +110,11 @@ class AuthService {
 	async authenticateWithBungie(): Promise<AuthResponse> {
 		try {
 			const authUrl = this.generateBungieAuthUrl()
+			console.log(authUrl)
 
-			const result = await WebBrowser.openAuthSessionAsync(
-				authUrl,
-				REDIRECT_URI,
-				{
-					showInRecents: true,
-				},
-			)
+			const result = await WebBrowser.openAuthSessionAsync(authUrl, REDIRECT_URI, {
+				showInRecents: true,
+			})
 
 			if (result.type !== 'success' || !result.url) {
 				throw new Error('Authentication was cancelled or failed')
@@ -197,8 +194,6 @@ class AuthService {
 			const platformDisplayName = await SecureStore.getItemAsync('platformDisplayName')
 			const crossSaveOverride = await SecureStore.getItemAsync('crossSaveOverride')
 			const platformsStr = await SecureStore.getItemAsync('platforms')
-
-
 
 			if (!userId || !displayName) {
 				return null

@@ -113,7 +113,6 @@ const server = Bun.serve({
 				return response
 			}
 
-
 			return new Response(JSON.stringify({ error: 'Not found' }), {
 				status: 404,
 				headers: { ...corsHeaders, 'Content-Type': 'application/json' }
