@@ -4,8 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "sst dev",
-    "start": "bun run --watch index.ts"
+    "dev": "bun run --watch index.ts"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.149",
