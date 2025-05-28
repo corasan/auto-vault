@@ -4,11 +4,11 @@
 	"private": true,
 	"workspaces": [
 		"mobile",
-		"functions"
+		"server"
 	],
 	"scripts": {
-	  "functions": "bun --cwd functions dev",
-		"mobile": "bun --cwd mobile start",
+	  "server": "bun --filter=server dev",
+		"mobile": "bun --filter=mobile dev",
 		"build:functions": "bun --cwd functions build",
 		"deploy:functions": "bun --cwd functions deploy",
 		"lint": "biome check .",
